@@ -17,7 +17,7 @@ func WriteCSV(filePath string, records []interface{}) error {
 		return errors.New("no records to write")
 	}
 
-	file, err := os.Create(filePath)
+	file, err := openOrCreateFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
