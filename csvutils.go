@@ -17,7 +17,7 @@ func WriteCSV(filePath string, records []interface{}) error {
 		return errors.New("no records to write")
 	}
 
-	file, err := os.Create(filePath)
+	file, err := openOrCreateFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -149,6 +149,10 @@ func getFieldSetter(fieldType reflect.Type) (func(reflect.Value, string) error, 
 		}, nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(v reflect.Value, s string) error {
+			if s == "" {
+				v.SetInt(0)
+				return nil
+			}
 			intValue, err := strconv.ParseInt(s, 10, 64)
 			if err != nil {
 				return fmt.Errorf("error parsing int value %s: %w", s, err)
@@ -158,6 +162,10 @@ func getFieldSetter(fieldType reflect.Type) (func(reflect.Value, string) error, 
 		}, nil
 	case reflect.Float32, reflect.Float64:
 		return func(v reflect.Value, s string) error {
+			if s == "" {
+				v.SetFloat(0)
+				return nil
+			}
 			floatValue, err := strconv.ParseFloat(s, 64)
 			if err != nil {
 				return fmt.Errorf("error parsing float value %s: %w", s, err)
@@ -167,6 +175,10 @@ func getFieldSetter(fieldType reflect.Type) (func(reflect.Value, string) error, 
 		}, nil
 	case reflect.Bool:
 		return func(v reflect.Value, s string) error {
+			if s == "" {
+				v.SetBool(false)
+				return nil
+			}
 			boolValue, err := strconv.ParseBool(s)
 			if err != nil {
 				return fmt.Errorf("error parsing bool value %s: %w", s, err)
