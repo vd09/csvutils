@@ -90,7 +90,7 @@ Bob,35,bob@example.com`)
 	}
 
 	// Call ReadCSV function with the file path
-	err = csvutils.ReadCSV(filePath, &TestStruct{}, handler)
+	err = csvutils.ReadCSV(filePath, &TestStruct{}, csvutils.WithHandler(handler))
 	if err != nil {
 		t.Fatalf("ReadCSV returned error: %v", err)
 	}
@@ -137,7 +137,7 @@ Bob,35,`)
 	}
 
 	// Call ReadCSV function with the file path
-	err = csvutils.ReadCSV(filePath, &TestStruct{}, handler)
+	err = csvutils.ReadCSV(filePath, &TestStruct{}, csvutils.WithHandler(handler))
 	if err != nil {
 		t.Fatalf("ReadCSV returned error: %v", err)
 	}

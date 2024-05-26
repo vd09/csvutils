@@ -6,3 +6,8 @@
 
 ```sh
 go get github.com/vd09/csvutils
+```
+### Benchmark Command
+```ssh
+go test -bench=. -benchmem
+```
