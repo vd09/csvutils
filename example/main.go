@@ -39,7 +39,7 @@ func main() {
 	}
 
 	// Read the data back from the CSV file.
-	err = csvutils.ReadCSV(fileName, &Person{}, handler)
+	err = csvutils.ReadCSV(fileName, &Person{}, csvutils.WithHandler(handler))
 	if err != nil {
 		log.Fatalf("failed to read CSV: %v", err)
 	}

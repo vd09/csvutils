@@ -15,14 +15,13 @@ import (
 type RecordHandler func(interface{}) error
 
 type csvOptions struct {
-	handler     RecordHandler // Change handler type to non-pointer
+	handler     RecordHandler
 	concurrency int32
 }
 
-// Option functions to set custom options
 func WithHandler(handler RecordHandler) func(*csvOptions) {
 	return func(opts *csvOptions) {
-		opts.handler = handler // Remove the pointer from handler
+		opts.handler = handler
 	}
 }
 
@@ -33,13 +32,11 @@ func WithConcurrency(concurrency int32) func(*csvOptions) {
 }
 
 func newCsvOptions(options []func(*csvOptions)) *csvOptions {
-	// Default options
 	opts := &csvOptions{
 		handler:     nil,
 		concurrency: 1,
 	}
 
-	// Apply user-defined options
 	for _, option := range options {
 		option(opts)
 	}
@@ -53,6 +50,9 @@ func ReadCSV(filePath string, recordType interface{}, options ...func(*csvOption
 		worker_pool.WithMaxWorkers(csvOptions.concurrency),
 		worker_pool.WithMinWorkers(csvOptions.concurrency),
 	)
+	if err != nil {
+		return fmt.Errorf("failed to create worker pool: %w", err)
+	}
 	defer pool.WaitAndStop()
 
 	file, err := os.Open(filePath)
@@ -61,7 +61,6 @@ func ReadCSV(filePath string, recordType interface{}, options ...func(*csvOption
 	}
 	defer file.Close()
 
-	// Wrap the file reader with a buffered reader
 	reader := csv.NewReader(bufio.NewReader(file))
 
 	headers, err := reader.Read()
@@ -91,7 +90,7 @@ func ReadCSV(filePath string, recordType interface{}, options ...func(*csvOption
 			}
 			return fmt.Errorf("failed to read record at line %d: %w", recordNum, err)
 		}
-		pool.AddTask(processRecord, record, elemType, fieldInfo, csvOptions.handler) // Pass handler as non-pointer
+		pool.AddTask(processRecord, record, elemType, fieldInfo, csvOptions.handler)
 		recordNum++
 	}
 	return nil
@@ -109,7 +108,14 @@ func processRecord(record []string, elemType reflect.Type, fieldInfo []fieldInfo
 			}
 			fieldValue = fieldValue.Elem()
 		}
-		if err := info.setter(fieldValue, record[info.columnIndex]); err != nil {
+		var value string
+		if info.columnIndex >= 0 && info.columnIndex < len(record) {
+			value = record[info.columnIndex]
+		}
+		if value == "" {
+			value = info.defaultValue
+		}
+		if err := info.setter(fieldValue, value); err != nil {
 			return fmt.Errorf("failed to set field value for field %s: %w", info.fieldName, err)
 		}
 	}
@@ -121,7 +127,6 @@ func processRecord(record []string, elemType reflect.Type, fieldInfo []fieldInfo
 	return nil
 }
 
-// Function to initialize nested pointer fields
 func initNestedPointers(v reflect.Value) {
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
@@ -161,24 +166,35 @@ func buildFieldInfo(elemType reflect.Type, columnIndex map[string]int, parentTag
 			fieldInfos = append(fieldInfos, nestedFieldInfos...)
 		} else {
 			index, ok := columnIndex[csvTag]
+			defaultValue := field.Tag.Get("default")
 			if !ok {
-				return nil, fmt.Errorf("missing CSV column: %s", csvTag)
+				//if defaultValue == "" {
+				//	return nil, fmt.Errorf("missing CSV column: %s", csvTag)
+				//}
+				index = -1 // Indicate that the column is missing and should use the default value
 			}
 			setter, err := getFieldSetter(field.Type)
 			if err != nil {
 				return nil, fmt.Errorf("unsupported field type for field %s: %w", field.Name, err)
 			}
-			fieldInfos = append(fieldInfos, fieldInfo{fieldName: field.Name, index: newFieldIndex, columnIndex: index, setter: setter})
+			fieldInfos = append(fieldInfos, fieldInfo{
+				fieldName:    field.Name,
+				index:        newFieldIndex,
+				columnIndex:  index,
+				setter:       setter,
+				defaultValue: defaultValue,
+			})
 		}
 	}
 	return fieldInfos, nil
 }
 
 type fieldInfo struct {
-	fieldName   string
-	index       []int
-	columnIndex int
-	setter      func(reflect.Value, string) error
+	fieldName    string
+	index        []int
+	columnIndex  int
+	setter       func(reflect.Value, string) error
+	defaultValue string
 }
 
 func getFieldSetter(fieldType reflect.Type) (func(reflect.Value, string) error, error) {
@@ -212,7 +228,7 @@ func getFieldSetter(fieldType reflect.Type) (func(reflect.Value, string) error, 
 	case reflect.Bool:
 		return func(v reflect.Value, s string) error {
 			if s == "" {
-				s = "0"
+				s = "false"
 			}
 			boolValue, err := strconv.ParseBool(s)
 			if err != nil {
