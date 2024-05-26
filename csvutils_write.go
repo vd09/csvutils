@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 )
 
@@ -14,7 +13,7 @@ func WriteCSV[T any](filePath string, records []T) error {
 		return errors.New("no records to write")
 	}
 
-	file, err := os.Create(filePath)
+	file, err := openOrCreateFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
