@@ -9,7 +9,7 @@ import (
 )
 
 // WriteCSV writes a slice of structs to a CSV file at the specified filePath.
-func WriteCSV(filePath string, records []interface{}) error {
+func WriteCSV[T any](filePath string, records []T) error {
 	if len(records) == 0 {
 		return errors.New("no records to write")
 	}
