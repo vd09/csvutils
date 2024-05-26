@@ -45,11 +45,11 @@ func main() {
 	}
 
 	// Example of reading CSV
-	err = csvutils.ReadCSV(fileName, &User{}, func(record interface{}) error {
+	err = csvutils.ReadCSV(fileName, &User{}, csvutils.WithHandler(func(record interface{}) error {
 		user := record.(*User)
 		fmt.Printf("Read record: %+v\n", user)
 		return nil
-	})
+	}))
 	if err != nil {
 		log.Fatalf("Failed to read CSV: %v", err)
 	}
