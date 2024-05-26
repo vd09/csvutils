@@ -1,0 +1,4 @@
+github.com/vd09/gr-variable v0.0.0-20240505213543-579df24f059a h1:6uRDHw7tlxgIrx9VgvgYvCPywf9ibFqwCz7H/Jgjw50=
+github.com/vd09/gr-variable v0.0.0-20240505213543-579df24f059a/go.mod h1:g5yh9XmWgxRaT7YJC2BckAKrARBcIEkUSJPAPfAhMEo=
+github.com/vd09/gr_worker v0.0.0-20240519173909-7cbaf2e959fc h1:ADMHUKIhRqFQYTQfc5KUECa8hbYRImwZu/iXQY8jA+0=
+github.com/vd09/gr_worker v0.0.0-20240519173909-7cbaf2e959fc/go.mod h1:KtnrqMas9T0/ELUOdfKeiRBQrtAUq3KeG9STBm+qrwo=
