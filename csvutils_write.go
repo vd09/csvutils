@@ -13,6 +13,7 @@ func WriteCSV[T any](filePath string, records []T) error {
 		return errors.New("no records to write")
 	}
 
+	fileExists := fileExists(filePath)
 	file, err := openOrCreateFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
@@ -30,13 +31,15 @@ func WriteCSV[T any](filePath string, records []T) error {
 		return errors.New("records elements must be struct")
 	}
 
-	headers, err := extractHeaders(elemType, "")
-	if err != nil {
-		return fmt.Errorf("failed to extract headers: %w", err)
-	}
+	if !fileExists {
+		headers, err := extractHeaders(elemType, "")
+		if err != nil {
+			return fmt.Errorf("failed to extract headers: %w", err)
+		}
 
-	if err := writer.Write(headers); err != nil {
-		return fmt.Errorf("failed to write header: %w", err)
+		if err := writer.Write(headers); err != nil {
+			return fmt.Errorf("failed to write header: %w", err)
+		}
 	}
 
 	for _, record := range records {

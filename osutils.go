@@ -6,11 +6,9 @@ import (
 )
 
 // openOrCreateFile opens the file for append if it exists, or creates a new file if it doesn't exist.
-func openOrCreateFile(filePath string) (*os.File, error) {
-	var file *os.File
-
+func openOrCreateFile(filePath string) (file *os.File, err error) {
 	// Check if the file exists
-	if _, err := os.Stat(filePath); err == nil {
+	if fileExists(filePath) {
 		// Open file for append
 		file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
@@ -24,5 +22,10 @@ func openOrCreateFile(filePath string) (*os.File, error) {
 		}
 	}
 
-	return file, nil
+	return
+}
+
+func fileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return err == nil
 }
